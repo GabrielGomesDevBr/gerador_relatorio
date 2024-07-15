@@ -1,8 +1,7 @@
 import streamlit as st
 from datetime import date
 from docx import Document
-from docx.shared import Pt
-from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
+import os
 
 # Função para gerar o documento .docx
 def generate_docx(data):
@@ -26,14 +25,13 @@ def generate_docx(data):
     doc.add_paragraph(f"Ciclo Escolar: {data['ciclo_escolar']} / Turma: {data['turma']}")
     doc.add_paragraph(f"Instituição de Ensino: {data['instituicao_ensino']}")
     doc.add_paragraph(f"Data do Relatório: {data['data_relatorio']}")
-    doc.add_paragraph(f"Nome do(a) Profissional Responsável: {data['nome_profissional']}")
+    doc.add_paragraph(f"Profissional Responsável: {data['profissional_responsavel']}")
 
     # Comportamentos Positivos e Negativos
     p = doc.add_paragraph()
     p.add_run('\nEvolução do Paciente:').bold = True
     for comportamento, descricao in data['comportamentos'].items():
-        if descricao is not None:
-            doc.add_paragraph(f"{comportamento}: {descricao}")
+        doc.add_paragraph(f"{comportamento}: {descricao}")
 
     # Intervenções Mediante as Barreiras Enfrentadas
     p = doc.add_paragraph()
@@ -80,9 +78,8 @@ def main():
         ciclo_escolar = st.selectbox('Ciclo Escolar', options=opcoes_ciclo_escolar)
         turma = st.selectbox('Turma', options=opcoes_turma)
         instituicao_ensino = st.text_input('Instituição de Ensino')
-        
         data_relatorio = st.date_input('Data do Relatório', value=date.today())
-        nome_profissional = st.text_input('Nome do(a) Profissional Responsável')
+        profissional_responsavel = st.text_input('Nome do(a) Profissional Responsável')
 
         st.header('Evolução do Paciente')
         
@@ -161,6 +158,7 @@ def main():
             ]
         }
 
+
         comportamentos_selecionados = {}
         for comportamento, opcoes in comportamentos.items():
             escolha = st.selectbox(comportamento, ["Positivo", "Negativo", "Não Aplicável"])
@@ -169,38 +167,42 @@ def main():
             elif escolha == "Negativo":
                 comportamentos_selecionados[comportamento] = opcoes[1]
             else:
-                comportamentos_selecionados[comportamento] = None
+                comportamentos_selecionados[comportamento] = ""
 
         st.header('Intervenções Mediante as Barreiras Enfrentadas')
-        intervencoes = st.text_area('Descreva as intervenções realizadas')
+        intervencoes = st.text_area('Intervenções Mediante as Barreiras Enfrentadas')
 
         st.header('Observações do Profissional')
-        observacoes_profissional = st.text_area('Observações')
+        observacoes_profissional = st.text_area('Observações do Profissional')
 
-        submitted = st.form_submit_button("Gerar Relatório")
-        
-        if submitted:
+        # Botão para gerar o relatório
+        if st.form_submit_button('Gerar Relatório'):
             data = {
                 'nome_paciente': nome_paciente,
                 'idade': idade,
                 'ciclo_escolar': ciclo_escolar,
                 'turma': turma,
                 'instituicao_ensino': instituicao_ensino,
-                'data_relatorio': data_relatorio.strftime('%d/%m/%Y'),
-                'nome_profissional': nome_profissional,
+                'data_relatorio': data_relatorio.strftime('%d-%m-%Y'),
+                'profissional_responsavel': profissional_responsavel,
                 'comportamentos': comportamentos_selecionados,
-                'intervencoes': [intervencoes],
+                'intervencoes': intervencoes.split('\n'),
                 'observacoes_profissional': observacoes_profissional
             }
-            filename = generate_docx(data)
-            st.success(f'Relatório gerado com sucesso: {filename}')
-            with open(filename, "rb") as file:
-                st.download_button(
-                    label="Download do Relatório",
-                    data=file,
-                    file_name=filename,
-                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                )
 
-if __name__ == "__main__":
+            filename = generate_docx(data)
+            st.success('Relatório gerado com sucesso!')
+
+            # Botão de download fora do formulário
+            if os.path.exists(filename):
+                with open(filename, "rb") as f:
+                    st.download_button(
+                        label="Baixar Relatório",
+                        data=f,
+                        file_name=f"{data['nome_paciente']}_relatorio.docx",
+                        mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                    )
+
+if __name__ == '__main__':
     main()
+
