@@ -176,7 +176,9 @@ def main():
         observacoes_profissional = st.text_area('Observações do Profissional')
 
         # Botão para gerar o relatório
-        if st.form_submit_button('Gerar Relatório'):
+        submitted = st.form_submit_button('Gerar Relatório')
+        
+        if submitted:
             data = {
                 'nome_paciente': nome_paciente,
                 'idade': idade,
@@ -193,16 +195,20 @@ def main():
             filename = generate_docx(data)
             st.success('Relatório gerado com sucesso!')
 
-            # Botão de download fora do formulário
-            if os.path.exists(filename):
-                with open(filename, "rb") as f:
-                    st.download_button(
-                        label="Baixar Relatório",
-                        data=f,
-                        file_name=f"{data['nome_paciente']}_relatorio.docx",
-                        mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                    )
+            # Salvar o nome do arquivo em uma variável de sessão
+            st.session_state.filename = filename
+
+    # Botão de download fora do formulário
+    if 'filename' in st.session_state:
+        filename = st.session_state.filename
+        if os.path.exists(filename):
+            with open(filename, "rb") as f:
+                st.download_button(
+                    label="Baixar Relatório",
+                    data=f,
+                    file_name=f"{data['nome_paciente']}_relatorio.docx",
+                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                )
 
 if __name__ == '__main__':
     main()
-
