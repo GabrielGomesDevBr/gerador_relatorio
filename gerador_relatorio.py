@@ -158,7 +158,6 @@ def main():
             ]
         }
 
-
         comportamentos_selecionados = {}
         for comportamento, opcoes in comportamentos.items():
             escolha = st.selectbox(comportamento, ["Positivo", "Negativo", "Não Aplicável"])
@@ -193,10 +192,8 @@ def main():
             }
 
             filename = generate_docx(data)
-            st.success('Relatório gerado com sucesso!')
-
-            # Salvar o nome do arquivo em uma variável de sessão
             st.session_state.filename = filename
+            st.success('Relatório gerado com sucesso!')
 
     # Botão de download fora do formulário
     if 'filename' in st.session_state:
@@ -206,7 +203,7 @@ def main():
                 st.download_button(
                     label="Baixar Relatório",
                     data=f,
-                    file_name=f"{data['nome_paciente']}_relatorio.docx",
+                    file_name=f"{data['nome_paciente'].replace(' ', '_')}_relatorio.docx",
                     mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                 )
 
