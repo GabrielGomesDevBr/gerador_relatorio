@@ -54,7 +54,7 @@ def main():
     # Opções para ciclo escolar e turma
     opcoes_ciclo_escolar = [
         "Creche 0 a 03 anos",
-        "Pré-escola 04 e 05 anos ",
+        "Pré-escola 04 e 05 anos",
         "1º ano Ensino Fundamental",
         "2º ano Ensino Fundamental",
         "3º ano Ensino Fundamental",
@@ -71,6 +71,7 @@ def main():
     opcoes_turma = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M"]
     
     # Formulário para entrada de dados
+    data = None  # Inicializa data como None
     with st.form("form"):
         st.header('Dados do Relatório')
         nome_paciente = st.text_input('Nome do Paciente')
@@ -92,7 +93,7 @@ def main():
                 "segue instruções simples de maneira independente, demonstrando compreensão e autonomia.",
                 "não segue instruções simples sem assistência, mostrando dificuldade em compreender ou seguir orientações."
             ],
-            "Participação em Atividades em Grupo": [
+           "Participação em Atividades em Grupo": [
                 "participa ativamente das atividades em grupo, como aulas de judô, música e rodas de conversa, mostrando envolvimento e interesse.",
                 "evita participar de atividades em grupo, preferindo o isolamento."
             ],
@@ -196,7 +197,7 @@ def main():
             st.success('Relatório gerado com sucesso!')
 
     # Botão de download fora do formulário
-    if 'filename' in st.session_state:
+    if data and 'filename' in st.session_state:
         filename = st.session_state.filename
         if os.path.exists(filename):
             with open(filename, "rb") as f:
