@@ -1,0 +1,7 @@
+[theme]
+base="light"
+primaryColor="#4CAF50"  # Um tom de verde que é calmante e agradável aos olhos.
+backgroundColor="#F0F0F0"  # Um fundo claro, mas não branco puro, para reduzir a intensidade.
+secondaryBackgroundColor="#D3D3D3"  # Um fundo secundário levemente mais escuro que o fundo principal.
+textColor="#333333"  # Um cinza escuro para texto, que oferece um bom contraste sem ser totalmente preto.
+font="sans serif"
