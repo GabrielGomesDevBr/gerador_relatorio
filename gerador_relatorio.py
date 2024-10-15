@@ -4,6 +4,16 @@ from docx import Document
 import os
 import base64
 
+# Configuração do tema
+if 'theme' not in st.session_state:
+    st.session_state.theme = 'dark'
+
+def toggle_theme():
+    if st.session_state.theme == 'light':
+        st.session_state.theme = 'dark'
+    else:
+        st.session_state.theme = 'light'
+
 # Função para gerar o documento .docx
 def generate_docx(data):
     filename = f"{data['nome_paciente'].replace(' ', '_').lower()}_{data['data_relatorio']}.docx"
