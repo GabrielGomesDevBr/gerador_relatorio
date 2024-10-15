@@ -2,10 +2,11 @@ import streamlit as st
 from datetime import date
 from docx import Document
 import os
+import base64
 
 # Função para gerar o documento .docx
 def generate_docx(data):
-    filename = f"{data['nome_paciente'].replace(' ', '_').lower()}_{data['data_relatorio'].replace('/', '-')}.docx"
+    filename = f"{data['nome_paciente'].replace(' ', '_').lower()}_{data['data_relatorio']}.docx"
     doc = Document()
     
     # Inserir dados da empresa
@@ -15,11 +16,8 @@ def generate_docx(data):
     doc.add_paragraph("RUA DR. ARGEMIRO COUTO DE BARROS, 06")
     doc.add_paragraph("CHÁCARA INGLESA, SÃO PAULO")
     
-    # Formatar título do paciente
-    p = doc.add_paragraph()
-    p.add_run('Dados do Paciente:').bold = True
-
-    # Inserir dados do paciente e relatório
+    # Dados do paciente
+    doc.add_heading('Dados do Paciente:', level=2)
     doc.add_paragraph(f"Nome do Paciente: {data['nome_paciente']}")
     doc.add_paragraph(f"Idade: {data['idade']} anos")
     doc.add_paragraph(f"Ciclo Escolar: {data['ciclo_escolar']} / Turma: {data['turma']}")
@@ -27,59 +25,79 @@ def generate_docx(data):
     doc.add_paragraph(f"Data do Relatório: {data['data_relatorio']}")
     doc.add_paragraph(f"Profissional Responsável: {data['profissional_responsavel']}")
 
-    # Comportamentos Positivos e Negativos
-    p = doc.add_paragraph()
-    p.add_run('\nEvolução do Paciente:').bold = True
+    # Evolução do Paciente
+    doc.add_heading('Evolução do Paciente:', level=2)
     for comportamento, descricao in data['comportamentos'].items():
-        doc.add_paragraph(f"{comportamento}: {descricao}")
+        if descricao:  # Só adiciona se houver descrição (não for "Não Aplicável")
+            doc.add_paragraph(f"{comportamento}: {descricao}")
 
-    # Intervenções Mediante as Barreiras Enfrentadas
-    p = doc.add_paragraph()
-    p.add_run('\nIntervenções Mediante as Barreiras Enfrentadas:').bold = True
-    for intervencao in data['intervencoes']:
-        doc.add_paragraph(intervencao)
+    # Intervenções
+    doc.add_heading('Intervenções Mediante as Barreiras Enfrentadas:', level=2)
+    doc.add_paragraph(data['intervencoes'])
 
-    # Observações do Profissional
-    p = doc.add_paragraph()
-    p.add_run('\nObservações do Profissional:').bold = True
+    # Observações
+    doc.add_heading('Observações do Profissional:', level=2)
     doc.add_paragraph(data['observacoes_profissional'])
 
     doc.save(filename)
     return filename
 
+# Configuração da página
+st.set_page_config(
+    page_title="Clínica Despertar - Relatório Mensal ATs",
+    page_icon="🧠",
+    layout="wide",
+    initial_sidebar_state="expanded",
+)
+
+# Função para criar um link de download
+def get_binary_file_downloader_html(bin_file, file_label='File'):
+    with open(bin_file, 'rb') as f:
+        data = f.read()
+    bin_str = base64.b64encode(data).decode()
+    href = f'<a href="data:application/octet-stream;base64,{bin_str}" download="{os.path.basename(bin_file)}">Download {file_label}</a>'
+    return href
+
+# Sidebar
+st.sidebar.title("Sobre o Gerador de Relatório")
+st.sidebar.info("""
+O Gerador de Relatório Mensal ATs é uma ferramenta criada pela AperData para a Clínica Despertar, com o objetivo de facilitar a elaboração de relatórios psicológicos detalhados e personalizados, oferecendo aos profissionais um suporte prático e eficiente para a documentação dos atendimentos..
+""")
+
+st.sidebar.title("Entre em Contato")
+st.sidebar.markdown("""
+Para soluções de IA sob medida ou suporte:
+
+- 🌐 [aperdata.com](https://aperdata.com)
+- 📱 WhatsApp: **11 98854-3437**
+- 📧 Email: **gabriel@aperdata.com**
+""")
 # Função principal da aplicação Streamlit
 def main():
     st.title('Clínica Despertar - Relatório Mensal ATs')
     
     # Opções para ciclo escolar e turma
     opcoes_ciclo_escolar = [
-        "Creche 0 a 03 anos",
-        "Pré-escola 04 e 05 anos",
-        "1º ano Ensino Fundamental",
-        "2º ano Ensino Fundamental",
-        "3º ano Ensino Fundamental",
-        "4º ano Ensino Fundamental",
-        "5º ano Ensino Fundamental",
-        "6º ano Ensino Fundamental",
-        "7º ano Ensino Fundamental",
-        "8º ano Ensino Fundamental",
-        "9º ano Ensino Fundamental",
-        "1º ano Ensino Médio",
-        "2º ano Ensino Médio",
-        "3º ano Ensino Médio"
+        "Creche 0 a 03 anos", "Pré-escola 04 e 05 anos",
+        "1º ano Ensino Fundamental", "2º ano Ensino Fundamental", "3º ano Ensino Fundamental",
+        "4º ano Ensino Fundamental", "5º ano Ensino Fundamental", "6º ano Ensino Fundamental",
+        "7º ano Ensino Fundamental", "8º ano Ensino Fundamental", "9º ano Ensino Fundamental",
+        "1º ano Ensino Médio", "2º ano Ensino Médio", "3º ano Ensino Médio"
     ]
     opcoes_turma = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M"]
     
     # Formulário para entrada de dados
-    data = None  # Inicializa data como None
     with st.form("form"):
         st.header('Dados do Relatório')
-        nome_paciente = st.text_input('Nome do Paciente')
-        idade = st.number_input('Idade', min_value=0, max_value=150)
-        ciclo_escolar = st.selectbox('Ciclo Escolar', options=opcoes_ciclo_escolar)
-        turma = st.selectbox('Turma', options=opcoes_turma)
-        instituicao_ensino = st.text_input('Instituição de Ensino')
-        data_relatorio = st.date_input('Data do Relatório', value=date.today())
+        col1, col2 = st.columns(2)
+        with col1:
+            nome_paciente = st.text_input('Nome do Paciente')
+            idade = st.number_input('Idade', min_value=0, max_value=150)
+            ciclo_escolar = st.selectbox('Ciclo Escolar', options=opcoes_ciclo_escolar)
+        with col2:
+            turma = st.selectbox('Turma', options=opcoes_turma)
+            instituicao_ensino = st.text_input('Instituição de Ensino')
+            data_relatorio = st.date_input('Data do Relatório', value=date.today())
         profissional_responsavel = st.text_input('Nome do(a) Profissional Responsável')
 
         st.header('Evolução do Paciente')
@@ -167,7 +185,7 @@ def main():
             elif escolha == "Negativo":
                 comportamentos_selecionados[comportamento] = opcoes[1]
             else:
-                comportamentos_selecionados[comportamento] = ""
+                comportamentos_selecionados[comportamento] = ""  # Não adiciona nada se for "Não Aplicável"
 
         st.header('Intervenções Mediante as Barreiras Enfrentadas')
         intervencoes = st.text_area('Intervenções Mediante as Barreiras Enfrentadas')
@@ -188,25 +206,13 @@ def main():
                 'data_relatorio': data_relatorio.strftime('%d-%m-%Y'),
                 'profissional_responsavel': profissional_responsavel,
                 'comportamentos': comportamentos_selecionados,
-                'intervencoes': intervencoes.split('\n'),
+                'intervencoes': intervencoes,
                 'observacoes_profissional': observacoes_profissional
             }
 
             filename = generate_docx(data)
-            st.session_state.filename = filename
             st.success('Relatório gerado com sucesso!')
-
-    # Botão de download fora do formulário
-    if data and 'filename' in st.session_state:
-        filename = st.session_state.filename
-        if os.path.exists(filename):
-            with open(filename, "rb") as f:
-                st.download_button(
-                    label="Baixar Relatório",
-                    data=f,
-                    file_name=f"{data['nome_paciente'].replace(' ', '_')}_relatorio.docx",
-                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                )
+            st.markdown(get_binary_file_downloader_html(filename, 'Relatório'), unsafe_allow_html=True)
 
 if __name__ == '__main__':
     main()
